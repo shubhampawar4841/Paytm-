@@ -12,6 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1", rootRouter); // Load routes
 
+
 app.get("/", (req, res) => res.send("Hello World"));
 
 const PORT = process.env.PORT || 3000;
