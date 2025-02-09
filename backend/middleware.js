@@ -3,7 +3,7 @@ const { JWT_SECRET } = require("./config");
 
 const authmiddleware = (req, res, next) => {
     // Allow open routes (signup & signin)
-    if (req.path === "/api/v1/signup" || req.path === "/api/v1/signin") {
+    if (req.path === "/api/v1/signup" || req.path === "/api/v1/signin" || req.path === "/api/v1/update") {
         return next();
     }
 

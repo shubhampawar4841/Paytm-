@@ -4,6 +4,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { User } = require("../db");
 const { JWT_SECRET } = require("../config");
+const { password } = require("pg/lib/defaults");
+const authMiddleware = require("../middleware");
 
 const router = express.Router();
 
@@ -17,6 +19,12 @@ const signupBody = zod.object({
 const signinBody = zod.object({
     username: zod.string().min(3).max(30),
     password: zod.string().min(6),
+});
+
+const updateBody = zod.object({
+    password: zod.string().min(6),
+    firstName: zod.string().max(50),
+    lastName: zod.string().max(50)
 });
 
 // 🔹 Signup Route
@@ -85,18 +93,67 @@ router.post("/signin", async (req, res) => {
     }
 });
 
-// 🔹 Secure Bulk Users Route
 router.get("/bulk", async (req, res) => {
+    const filter = req.query.filter || "";
+
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                "$regex": filter
+            }
+        }, {
+            lastName: {
+                "$regex": filter
+            }
+        }]
+    })
+
+    res.json({
+        user: users.map(user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            _id: user._id
+        }))
+    })
+})
+
+ 
+router.put("/", authMiddleware, async (req, res) => {
+    const { success } = updateBody.safeParse(req.body)
+    if (!success) {
+        res.status(411).json({
+            message: "Error while updating information"
+        })
+    }
+
+		await User.updateOne({ _id: req.userId }, req.body);
+	
+    res.json({
+        message: "Updated successfully"
+    })
+})
+
+router.put("/delete", async (req, res) => {
     try {
-        const { page = 1, limit = 10 } = req.query;
-        const users = await User.find({}, { password: 0 }) // Exclude passwords
-            .skip((page - 1) * limit)
-            .limit(Number(limit));
-        res.json(users);
+        const user = await User.findOne({ username: req.body.username });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid username" });
+        }
+
+        const deletedUser = await User.deleteOne({ username: req.body.username }); 
+
+        res.status(200).json({
+            message: "User deleted successfully",
+            deletedUser
+        });
+
     } catch (error) {
-        console.error("Bulk Fetch Error:", error);
+        console.error("Delete Error:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
+
+
 
 module.exports = router;
