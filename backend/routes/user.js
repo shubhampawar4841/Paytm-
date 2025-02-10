@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const { User } = require("../db");
 const { JWT_SECRET } = require("../config");
 const { password } = require("pg/lib/defaults");
-const authMiddleware = require("../middleware");
+const {authMiddleware} = require("../middleware");
 const { Account } = require("../db");
 
 const router = express.Router();
@@ -76,34 +76,34 @@ router.post("/signup", async (req, res) => {
 
 // 🔹 Signin Route
 router.post("/signin", async (req, res) => {
-    try {
-        const { success } = signinBody.safeParse(req.body);
-        if (!success) {
-            return res.status(400).json({ message: "Invalid input data" });
-        }
-
-        const user = await User.findOne({ username: req.body.username });
-        if (!user) {
-            return res.status(401).json({ message: "Invalid username or password" });
-        }
-
-        const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: "Invalid username or password" });
-        }
-
-        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
-
-        res.status(200).json({
-            message: "User signed in successfully",
-            token
-        });
-
-    } catch (error) {
-        console.error("Signin Error:", error);
-        res.status(500).json({ message: "Internal server error" });
+    const { success } = signinBody.safeParse(req.body)
+    if (!success) {
+        return res.status(411).json({
+            message: "Incorrect inputs"
+        })
     }
-});
+
+    const user = await User.findOne({
+        username: req.body.username,
+        password: req.body.password
+    });
+
+    if (user) {
+        const token = jwt.sign({
+            userId: user._id
+        }, JWT_SECRET);
+  
+        res.json({
+            token: token
+        })
+        return;
+    }
+
+    
+    res.status(411).json({
+        message: "Error while logging in"
+    })
+})
 
 router.get("/bulk", async (req, res) => {
     const filter = req.query.filter || "";
@@ -131,7 +131,7 @@ router.get("/bulk", async (req, res) => {
 })
 
  
-router.put("/", authMiddleware, async (req, res) => {
+router.put("/update", authMiddleware, async (req, res) => {
     const { success } = updateBody.safeParse(req.body)
     if (!success) {
         res.status(411).json({
@@ -145,26 +145,6 @@ router.put("/", authMiddleware, async (req, res) => {
         message: "Updated successfully"
     })
 })
-
-router.put("/delete", async (req, res) => {
-    try {
-        const user = await User.findOne({ username: req.body.username });
-        if (!user) {
-            return res.status(401).json({ message: "Invalid username" });
-        }
-
-        const deletedUser = await User.deleteOne({ username: req.body.username }); 
-
-        res.status(200).json({
-            message: "User deleted successfully",
-            deletedUser
-        });
-
-    } catch (error) {
-        console.error("Delete Error:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
 
 
 
