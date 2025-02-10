@@ -1,25 +1,21 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Signup from './pages/Signup'
-import Signin from './pages/Signin'
-import Dashboard from './pages/Dashboard'
-import SendMoney from './pages/SendMoney'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import {Signup} from './pages/SignUp'
+import {Signin} from './pages/Signin'
+import { SendMoney} from './pages/SendMoney'
+import { DashBoard } from "./pages/DashBoard";
 
 function App() {
   return (
-    <>
-       <BrowserRouter>
-        <Routes>
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/signin" element={<Signin />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/send" element={<SendMoney />} />
-        </Routes>
-      </BrowserRouter>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/signin" />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/dashboard" element={<DashBoard />} />
+        <Route path="/send" element={<SendMoney />} />
+        <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
