@@ -1,19 +1,31 @@
 const express = require("express");
-const cors = require("cors");
-const rootRouter = require("./routes/index");
-
 const app = express();
+const cors = require("cors");
+const userRoutes = require("./routes/userRoutes");
+const accountRoutes = require("./routes/accountRoutes");
 
-// ✅ Apply Middleware Correctly
-app.use(cors());
+app.use(cors("*"));
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+require("dotenv").config();
 
-app.use("/api/v1", rootRouter); // Load routes
+const dbConnect = require("./config/db");
+dbConnect();
 
+// Routes
+app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/account", accountRoutes);
 
-app.get("/", (req, res) => res.send("Hello World"));
+app.get("/", (req, res) => {
+  res.json({ message: "Your server is up and running..." });
+});
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Something went wrong", error: err.message });
+});
 
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});

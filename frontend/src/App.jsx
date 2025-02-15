@@ -3,7 +3,7 @@ import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
 import Dashboard from "./pages/Dashboard";
 import SendMoney from "./pages/SendMoney";
-import PrivateRoute from "./components/auth/PrivateRourte";
+import PrivateRoute from "./components/auth/PrivateRoute";
 import Settings from "./pages/Settings";
 import Home from "./pages/Home";
 
