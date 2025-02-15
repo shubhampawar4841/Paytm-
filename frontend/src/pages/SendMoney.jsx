@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import {Heading} from "../components/Heading";
-import { useSearchParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Heading } from "../components/Heading";
+import { useSearchParams, useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 import { sendMoney } from "../services/operations/transactionApi";
 import { useRecoilValue } from "recoil";
 import { tokenAtom, userAtom } from "../store/atoms";
@@ -8,12 +8,19 @@ import Appbar from "../components/Appbar";
 
 const SendMoney = () => {
   const [searchParams] = useSearchParams();
-  const name = searchParams.get("name").split("_").join(" ");
+  const navigate = useNavigate(); // ✅ Initialize navigate
+  const name = searchParams.get("name")?.split("_").join(" ") || "";
   const id = searchParams.get("id");
+  const prefilledAmount = searchParams.get("amount") || "";
+  
   const token = useRecoilValue(tokenAtom);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(prefilledAmount);
   const [success, setSuccess] = useState(false);
   const user = useRecoilValue(userAtom);
+
+  useEffect(() => {
+    setAmount(prefilledAmount); // Set the amount when page loads
+  }, [prefilledAmount]);
 
   function handleChange(event) {
     setAmount(event.target.value);
@@ -25,6 +32,11 @@ const SendMoney = () => {
     if (response === "Transfer successful") {
       setAmount("");
       setSuccess(true);
+
+      // ✅ Redirect to Dashboard after 1.5 seconds
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
     } else {
       setSuccess(false);
     }
@@ -42,6 +54,7 @@ const SendMoney = () => {
                 <img
                   src={`https://api.dicebear.com/9.x/initials/svg?seed=${name}`}
                   className="h-[90%] w-[90%] rounded-full"
+                  alt={name}
                 />
               </div>
               <div className="font-bold text-xl  ml-3">{name}</div>
@@ -49,7 +62,7 @@ const SendMoney = () => {
             <div className="mt-1">
               <label className="flex flex-col">
                 <span className="block font-semibold text-sm self-start">
-                  Amount (in RS)
+                  Amount (in ₹)
                 </span>
                 <input
                   type="text"
@@ -65,11 +78,11 @@ const SendMoney = () => {
               onClick={handleClick}
               className="my-3 bg-green-500 w-full px-5 py-2 rounded text-white font-semibold hover:cursor-pointer focus:scale-[1.01] transition-all duration-200"
             >
-              Initiate Transfer
+              Pay Now
             </button>
             {success && (
               <div className="font-light text-green-400 text-xs mt-2">
-                Payment Success!
+                ✅ Payment Successful! Redirecting to Dashboard...
               </div>
             )}
           </div>
